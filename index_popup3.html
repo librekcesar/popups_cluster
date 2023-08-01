@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <!--llama a las librerias de leaflet-->
+  <head>
+    <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"
+    />
+    
+<!--Librerías para llamar la función cluster map-->
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/MarkerCluster.Default.css" />
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/0.5.0/leaflet.markercluster.js"></script>
+	
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>	
+
+
+    <!--NOTA IMPORTANTE: RECUERDA que el geojson se debe de cambiar la extensión a .js-->
+<!--Y abrir el archivo js en editor como visual y antes de todo el código poner la siguiente sentencia:-->
+<!--  var densidad ={todo el código de javascript}   -->
+
+    <!--El contenedor del mapa se agrega en el primer div del head-->
+    <style>
+      #map {
+        width: 100%;
+        height: 800px;
+        box-shadow: 5px 5px 5px #888;
+      }
+/*Aqui comienza el codigo para poner leyenda*/
+      body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .mapboxgl-ctrl {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ffffff;
+      padding: 10px;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .legend-circle {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    </style>
+
+    <!--Esta linea importa el archivo vectorial. Es importante mencionar que esta en local y se cambio la extensión a .js-->
+    <!--Se cambia la extensión para que pueda leerlo. luego se llama esta capa más abajo en la parte del body en la parte de js-->
+    <script type="text/javascript" src="cuadri_guada_wgs84_2.js"></script>
+    <script type="text/javascript" src="p99_guadal.js"></script>
+    
+    <!--Lineas para intentar agregar popup complementos, aunque en este codigo no se usaron-->
+    <script src="leaflet-search-master\src\leaflet-search.js"></script>
+    <link rel="stylesheet" href="leaflet-search-master\src\leaflet-search.css" />
+    <!--Terminan las llamadas a la librería del plugin-->
+    
+
+  </head>
+  <body>
+    <!--Esta linea genera un unico elemento de documento, es un marcador para el mapa. se le dá un atributo id para hacer referencia al mapa-->
+    <div id="map"></div>
+    <!--L.map es la clase central de la API, Se usa para crear y manipular el mapa-->
+
+    <div id="legend" class="mapboxgl-ctrl">
+        <h3>Simbología</h3>
+        <ul>
+          <li><span class="legend-circle" style="background-color: #F5EBC7;"></span> 1 a 5 </li>
+          <li><span class="legend-circle" style="background-color: #F2A057;"></span> De 5 a 10 </li>
+          <li><span class="legend-circle" style="background-color: #E66B68;"></span> De 10 a 50 </li>
+          <li><span class="legend-circle" style="background-color: #9F282B;"></span> De 50 a 100 </li>
+          <li><span class="legend-circle" style="background-color: #7F2525;"></span> De 100 a 193 </li>
+          
+        </ul>
+      </div>
+
+    <script>
+      var map = L.map("map").setView([20.672989, -103.350176], 11);
+
+      
+      //Esta linea añade un mapa base o las capas de openstreet map en este caso
+      L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+        maxZoom: 18
+      }).addTo(map);
+
+      //Añadiendo un control de escala (muestra la escala a la que se encuentra el mapa)
+      L.control.scale().addTo(map);
+
+      
+      
+      
+      //IMPORTANTE
+      //Esta parte llama la capa geojson y la pone en el mapa
+      L.geoJson(cuadri_guada_wgs84_2).addTo(map);
+
+
+
+      //////Codigo para el cluster map
+
+      function pop_popplaces(feature, layer) {
+            var popupContent = 'name: ' + String(feature.properties['id']) + '<br>dir_dest: ' + String(feature.properties['dir_dest']);
+            layer.bindPopup(popupContent);
+        }
+        function popplaces_marker(feature, latlng) {
+            return L.circleMarker(latlng, {
+                radius: 4.0,
+                fillColor: '#ff0000',
+                color: '#000000',
+                weight: 1,
+                opacity: 1.0,
+                fillOpacity: 0.8
+            })
+        }
+	
+        var popplaces = new L.geoJson(p99_guadal,{
+
+            onEachFeature: pop_popplaces,
+            pointToLayer: popplaces_marker
+		
+        });
+
+	
+	
+        var cluster_popplaces= new L.MarkerClusterGroup({showCoverageOnHover: false});
+        cluster_popplaces.addLayer(popplaces);
+        cluster_popplaces.addTo(map);
+
+    
+     ///////////
+      
+      
+      
+      
+
+      //Para crear un mapa de coropletas. Se crea una función para dar colores a cada poligono dependiendo 
+      //un rango de colores
+      function getColor(d) {
+return d > 34 ? '#800026' : 
+d > 20 ? '#BD0026' : 
+d > 15 ? '#E31A1C' : 
+d > 9 ? '#FC4E2A' : 
+d > 5 ? '#FD8D3C' : 
+d > 1 ? '#FEB24C' : 
+d > 0 ? '#FED976' : 
+'#FFEDA0'; 
+}
+
+//con este código se ajusta la apariencia (transparencia ancho de linea, fondo del color)
+function style(feature) { 
+return { 
+fillColor: getColor(
+feature.properties.NUMPOINTS), //IMPORTANTE esta línea llama al atributo que se va a clasificar
+weight: 2, 
+opacity: 1, 
+color: 'black', 
+dashArray: '3', 
+fillOpacity: 0.3 
+}; 
+}
+
+
+
+
+
+//Luego se tiene que llamar a la capa o añadirla al mapa, la capa se encuentra despúes de la función L.geojson
+//Se llama dos veces la capa densidad, porque se le está añadiento una apariencia, es decir
+//con el código de arriba se le da un estilo a la capa densidad y luego se vuelve a llamar ya con ese estilo
+L.geoJson(cuadri_guada_wgs84_2, { style: style }).addTo(map);
+
+
+
+
+
+
+//Para añadir un popup al mapa. Que arroje info en cada vez que se dé click
+//se pone la siguiente función, la función comprueba que la parte de propierties existe y NAME verifica el nombre
+//del atributo 
+// FUNCION POPUP DEÑ CODIGO DE EJERLEAFLET SOLO MUESTRA EL POPUP DONDE NO HAY PUNTOS
+function popup(feature, layer) { 
+if (feature.properties && feature.properties.id) //NAME
+{ 
+layer.bindPopup(feature.properties.NUMPOINTS); //NAME     //esta función construye la funcionalidad en el mapa
+} 
+}
+
+
+
+
+//Aqui se construye la función que crea las ventanas emergentes, y se llama nuevamente a la capa 
+geojson = L.geoJson(cuadri_guada_wgs84_2, { 
+ style: style, onEachFeature: popup 
+}) 
+.addTo(map); //eSTA FUNCIÓN NO ALTERA EL MAPA PERO NO MUESTRA LOS POPUP PUEDE SER POR EL CLUSTER MAP
+
+  
+
+
+    </script>
+  </body>
+</html>
